@@ -1,0 +1,74 @@
+﻿@using bookstore.Data
+@using bookstore.Models
+@inject BookStoreDbContext _context
+@page "/"
+@inject NavigationManager _nm
+@inject AuthenticationStateProvider _asp
+@inject ApplicationDbContext context
+
+
+<PageTitle>Books</PageTitle>
+
+
+@foreach(var item in BooksList)
+{
+    <div class="card">
+        <div class="card-body">
+            <dl>
+                <dt>Book title:</dt>
+                <dd>@item.BookTitle</dd>
+            </dl>
+            <dl>
+                <dt>Author Name:</dt>
+                <dd>@item.Author</dd>
+            </dl>
+            <dl>
+                <dt>Genre: </dt>
+                <dd>@item.Genre</dd>
+            </dl>
+            <dl>
+                <dt>Price: </dt>
+                <dd>@item.Price</dd>
+            </dl>
+            <button @onclick="e=>AddtoCart(item)" class="btn btn-link">Add to Cart</button>
+        </div>
+    </div>
+}
+
+
+
+@code{
+    public List<Models.Books> BooksList = new List<Models.Books>();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            BooksList = _context.Book.ToList();
+            if (BooksList is null)
+            {
+                BooksList = new List<Models.Books>();
+            }
+        }
+        catch(Exception e)
+        {
+            string message = e.Message;
+            Console.WriteLine(message);
+        }
+
+    }
+
+    async Task AddtoCart(Books Book)
+    {
+        var authState = await _asp.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var User = context.Users.SingleOrDefault(x => x.UserName == user.Identity.Name);
+        CartItems Cartitem = new CartItems();
+        if (User is not null)
+        {
+            Cartitem.UserId= User.Id;
+            Cartitem.Price = Book.Price;
+        }
+    }
+}
+
